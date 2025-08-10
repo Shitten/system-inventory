@@ -20,8 +20,8 @@ void bucket(item **ptr, int **cnt){
     
     if (**cnt > 0) {
    unsigned int index = (*ptr)[**cnt].hash;
-   ptr->next = hashtable[index];
-    hashtable[index] = ptr;
+   (*ptr)[**cnt].next = hashtable[index];
+    hashtable[index] = &(*ptr)[**cnt];
 } else {
    printf("nothing to hash\n");
    
@@ -40,6 +40,7 @@ void add(int **capacity, int **count, item **items);
  void edit(item **ptr, int **cpt, int **cnt); 
  void storeItem(item **ptr, int **cpt, int **cnt);
 void hash(const char *str,item **ptr);
+void search(item **ptr);
 
 
 
@@ -102,6 +103,16 @@ do{
 
 
 };
+void search(item **ptr){
+    char buffer[50];
+    item temp;
+    item *temp_ptr = &temp;
+printf("Enter ID:");
+read_clean(buffer, sizeof(buffer));
+hash(buffer,&temp_ptr);
+printf("%X",temp_ptr->hash);
+
+};
 
 void storeItem (item **ptr,int **cpt,int **cnt){
 char tempstr[100];
@@ -154,8 +165,9 @@ if (**cnt > 0) {
 
   
     unsigned int hashed = hashs % 0xFFF;
+    if(*ptr != NULL){
     (*ptr)->hash = hashed;
-   
+    }
     printf("%X:%s\n", (*ptr)->hash, original); 
 }
 
@@ -241,7 +253,8 @@ choice = atoi(input);
                 
                 break;
             case 4:
-              
+              search(ptr);
+                break;
                 break;
             case 5:
               
