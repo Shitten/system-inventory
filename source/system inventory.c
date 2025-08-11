@@ -19,7 +19,9 @@ item *hashtable[HASH_TABLE] = {NULL};
 void bucket(item **ptr, int **cnt){
     
     if (**cnt > 0) {
-   unsigned int index = (*ptr)[**cnt].hash;
+   unsigned int index = (*ptr)[**cnt - 1].hash;
+(*ptr)[**cnt - 1].next = hashtable[index];
+hashtable[index] = &(*ptr)[**cnt - 1];
    (*ptr)[**cnt].next = hashtable[index];
     hashtable[index] = &(*ptr)[**cnt];
 } else {
@@ -105,12 +107,32 @@ do{
 };
 void search(item **ptr){
     char buffer[50];
-    item temp;
+    item  temp;
     item *temp_ptr = &temp;
+   
 printf("Enter ID:");
 read_clean(buffer, sizeof(buffer));
-hash(buffer,&temp_ptr);
+hash(buffer, &temp_ptr);
+unsigned int index = temp_ptr->hash;
+ item *current = hashtable[temp.hash];
 printf("%X",temp_ptr->hash);
+printf("Looking in bucket %u\n", temp_ptr->hash);
+if (hashtable[temp_ptr->hash] == NULL) {
+    printf("Bucket empty!\n");
+}
+int found = 0;
+while(current !=NULL){
+    if(strcmp (current->id,buffer) ==0 ){
+   printf("id %s\n",current->name);
+   found = 1;
+        break; 
+    }
+    current = current->next;
+}
+if(!found){
+    printf("rip lil bro\n");
+}
+
 
 };
 
@@ -119,7 +141,7 @@ char tempstr[100];
 
  if(*cpt == NULL){
     *cpt = realloc(*cpt,sizeof(int));
-**cpt = 4;
+**cpt = 4; 
  };
  if(*cnt == NULL){
  *cnt =realloc(*cnt,sizeof(int));
@@ -164,7 +186,7 @@ if (**cnt > 0) {
     }
 
   
-    unsigned int hashed = hashs % 0xFFF;
+    unsigned int hashed = hashs % HASH_TABLE;
     if(*ptr != NULL){
     (*ptr)->hash = hashed;
     }
@@ -201,8 +223,9 @@ printf("Enter price:\n");
 read_clean(buffer, sizeof(buffer));
 
 hash(p1->id, &p1);
-
 (**count)++;
+bucket(items, count);
+printf("Adding ID: %s, hash: %u\n", p1->id, p1->hash);
 p1->price = strtof(buffer, NULL);
        
         
