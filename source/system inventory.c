@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 
+
 #define HASH_TABLE 4096
 typedef struct item{
 char id[100];
@@ -15,6 +16,13 @@ struct item *next;
 
 } item;
 item *hashtable[HASH_TABLE] = {NULL};
+void hash(const char *str, item **ptr);
+void bucket(item **ptr, int **cnt);
+void read_clean(char *buffer, int size);
+void option(int **num,int **capacity,int **count, item **p1);
+
+
+    
 
 void bucket(item **ptr, int **cnt){
     
@@ -57,7 +65,7 @@ void save(item **ptr){
     read_clean(again, sizeof(again));
 
     sprintf((*ptr)->file, "%s.txt", again);
-    FILE *fp =fopen((*ptr)->file, "a");
+    FILE *fp =fopen(again, "wb");
      if(again[0] == '\0' || (*ptr)->file[0] == '\n'){
         printf("Eroor: cant name an empty file :(\n");
         int ch;
@@ -69,7 +77,7 @@ void save(item **ptr){
             while ((ch = getchar()) != '\n' && ch != EOF);
      }else{
          fprintf(fp,"%-10s|%-10s|%-10s|%-10s\n", "ID","Name","Quantity","Price");
-      fprintf(fp, "%-10s|%-10s|%-10s|%-10.2f\n", (*ptr)->id, (*ptr)->name, (*ptr)->quantity, (*ptr)->price);
+         fwrite(fp,sizeof(*ptr),1,fp);
       printf("=======================END====================\n");
       getchar();
 
@@ -182,7 +190,7 @@ if (**cnt > 0) {
 
    
     while ((c = *str++)) {
-        hashs= ((hashs << 5) + hashs) + c;
+        hashs = ((hashs << 5) + hashs) + c;
     }
 
   
@@ -345,6 +353,8 @@ void checkvalue(int **num,int **capacity,int **count, item **p1){
         read_clean(input, sizeof(input));  // Instead of fgets + newline strip
 **num = atoi(input);
         **num = atoi(input);  //dereferenced it to convert it into int which is stored in num in main()
+
+
         if(**num >= 1 && **num <=8){
             #ifdef _WIN32
             system("cls");
