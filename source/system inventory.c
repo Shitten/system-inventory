@@ -20,6 +20,7 @@ void hash(const char *str, item **ptr);
 void bucket(item **ptr, int **cnt);
 void read_clean(char *buffer, int size);
 void option(int **num,int **capacity,int **count, item **p1);
+unsigned int c_result;
 
 
     
@@ -52,10 +53,26 @@ void add(int **capacity, int **count, item **items);
 void hash(const char *str,item **ptr);
 void search(item **ptr);
 
+void checksum_Generate(void *data, size_t size, int **cnt,unsigned int *result){
+    *result = 0x55AA55AA;
+unsigned int counts = (unsigned int)(**cnt);
+unsigned char *p = (unsigned char*)data;
 
 
 
-void save(item **ptr){
+for(size_t i = 0; i< size;i++){
+    *result += p[i];
+    *result *= p[i]+ size;
+    *result ^= (p[i]* counts)+ 1;
+    
+};
+
+
+}
+
+
+
+void save(item **ptr, int **cnt){
    char again[50];
     
     
@@ -64,7 +81,27 @@ void save(item **ptr){
         printf("enter the file name:");
     read_clean(again, sizeof(again));
 
-    sprintf((*ptr)->file, "%s.txt", again);
+    snprintf((*ptr)->file,sizeof((*ptr)->file), "%s.dat", again);
+    if (**cnt == 0) {
+    printf("Error: No items to checksum!\n");
+    return;
+}
+   
+    printf("\n=== ITEMS TO SAVE ===\n");
+    for (int i = 0; i < **cnt; i++) {
+        printf("Item %d: ID='%s', Name='%s',Quantity='%s', Price=%.2f\n",
+               i, (*ptr)[i].id, (*ptr)[i].name,(*ptr)[i].quantity, (*ptr)[i].price);
+    }
+
+    checksum_Generate(*ptr, (**cnt) * sizeof(item), cnt, &c_result); //when calling the c_result, it updates since the *out holds the values
+// DEBUG: Print checksum and data being hashed
+printf("Checksum Input: %zu bytes (items=%d)\n", (**cnt)*sizeof(item), **cnt);
+for (int i = 0; i < **cnt; i++) {
+    printf("Item %d: ID='%s'\n", i, (*ptr)[i].id);
+}
+;
+
+    printf("checksum: %u\n", c_result);
     FILE *fp =fopen(again, "wb");
      if(again[0] == '\0' || (*ptr)->file[0] == '\n'){
         printf("Eroor: cant name an empty file :(\n");
@@ -76,8 +113,15 @@ void save(item **ptr){
      int ch;
             while ((ch = getchar()) != '\n' && ch != EOF);
      }else{
-         fprintf(fp,"%-10s|%-10s|%-10s|%-10s\n", "ID","Name","Quantity","Price");
-         fwrite(fp,sizeof(*ptr),1,fp);
+         size_t item_count = (size_t)(**cnt);
+         fwrite(&c_result, sizeof(unsigned int), 1, fp);
+         fwrite(&item_count, sizeof(item_count),1,fp);
+         if(fwrite(*ptr,sizeof(item),item_count,fp)!= item_count){
+            printf("File writing failed\n");
+            fclose(fp);
+            continue;
+         };
+        
       printf("=======================END====================\n");
       getchar();
 
@@ -262,6 +306,7 @@ void show_options(item **ptr, int **cpt, int **cnt) {
         printf("Edit Item?:[2]\n");
         printf("Delete Item?:[3]\n");
         printf("Search Item?:[4]\n");
+        printf("Save Item?:[5]\n");
         
 
         // get input
@@ -288,7 +333,7 @@ choice = atoi(input);
                 break;
                 break;
             case 5:
-              
+              save(ptr, cnt);
                 break;
             case 6:
                
