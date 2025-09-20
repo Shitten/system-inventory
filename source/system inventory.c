@@ -5,6 +5,7 @@
 
 
 #define HASH_TABLE 4096
+#pragma pack(push,1)
 typedef struct item{
 char id[100];
 char name[100];
@@ -15,6 +16,7 @@ unsigned int hash;
 struct item *next;
 
 } item;
+#pragma pack(pop)
 item *hashtable[HASH_TABLE] = {NULL};
 void hash(const char *str, item **ptr);
 void bucket(item **ptr, int **cnt);
@@ -52,6 +54,7 @@ void add(int **capacity, int **count, item **items);
  void storeItem(item **ptr, int **cpt, int **cnt);
 void hash(const char *str,item **ptr);
 void search(item **ptr);
+void load(item **ptr, int **cnt);
 
 void checksum_Generate(void *data, size_t size, int **cnt,unsigned int *result){
     *result = 0x55AA55AA;
@@ -75,6 +78,11 @@ for(size_t i = 0; i< size;i++){
 void save(item **ptr, int **cnt){
    char again[50];
     
+        #ifdef _WIN32
+            system("cls");
+        #else
+            system("clear");
+        #endif
     
 
     while(1){
@@ -134,6 +142,52 @@ for (int i = 0; i < **cnt; i++) {
     }
      
 }
+void load(item **ptr, int **cnt){
+    unsigned int result;
+    char buffer[50];
+  printf("Enter file to open\n");
+  read_clean(buffer,sizeof(buffer));
+    FILE *fp = fopen(buffer,"rb");
+    if(buffer[0] == '\0' || fp == NULL){
+        printf("file not found or you didnt fucking put a name just pressed enter\n");
+    }
+   if (*cnt == NULL) {
+    *cnt = malloc(sizeof(int));
+    if (*cnt == NULL) {
+        printf("cnt allocation failed\n");
+        return;
+    }   
+   
+}
+
+size_t item_count = (size_t)(**cnt);
+ void *tmp =realloc(*ptr,(**cnt) * sizeof(item));
+         *ptr = tmp;
+         if(*ptr == NULL){
+            printf("load file allocation failed oof\n");
+         }
+
+         fread(&c_result, sizeof(unsigned int), 1, fp);
+         fread(&item_count, sizeof(item_count),1,fp);
+       
+        
+              fread(*ptr,sizeof(item),item_count,fp);
+              if (*cnt == NULL) {
+        *cnt = malloc(sizeof(int));
+    }
+    **cnt = (int)item_count;
+       
+         checksum_Generate(*ptr, item_count * sizeof(item), cnt, &result);
+         
+         if(result == c_result){
+         printf("checksum integrity functional and correct\n");
+         printf("checksum %zu\n",result);
+         printf("file checksum %zu\n",c_result);
+         }else{
+            printf("checksum not matching, file may be corrupted\n");
+         }
+}
+
 
 void delete(){
 
@@ -161,6 +215,12 @@ void search(item **ptr){
     char buffer[50];
     item  temp;
     item *temp_ptr = &temp;
+    
+        #ifdef _WIN32
+            system("cls");
+        #else
+            system("clear");
+        #endif
    
 printf("Enter ID:");
 read_clean(buffer, sizeof(buffer));
@@ -368,7 +428,14 @@ void option(int **num,int **capacity,int **count,item **p1){
       
     }
     case 3:{
-
+ #ifdef _WIN32
+        system("cls");
+        #else
+        system("clear");
+        #endif
+        load(p1,count);
+       
+        break;
     }
     case 4:{
 
