@@ -54,15 +54,19 @@ void add(int **capacity, int **count, item **items);
  void storeItem(item **ptr, int **cpt, int **cnt);
 void hash(const char *str,item **ptr);
 void search(item **ptr);
-void load(item **ptr, int **cnt);
+void load(item **ptr,int **cpt, int **cnt);
 
 void checksum_Generate(void *data, size_t size, int **cnt,unsigned int *result){
     *result = 0x55AA55AA;
 unsigned int counts = (unsigned int)(**cnt);
 unsigned char *p = (unsigned char*)data;
-
-
-
+if (p == NULL) {
+    p = (unsigned char*)malloc(size);
+    if (p == NULL) {
+        printf("p data allocation failure\n");
+        return;
+    }
+}
 for(size_t i = 0; i< size;i++){
     *result += p[i];
     *result *= p[i]+ size;
@@ -104,7 +108,7 @@ void save(item **ptr, int **cnt){
     checksum_Generate(*ptr, (**cnt) * sizeof(item), cnt, &c_result); //when calling the c_result, it updates since the *out holds the values
 // DEBUG: Print checksum and data being hashed
 printf("Checksum Input: %zu bytes (items=%d)\n", (**cnt)*sizeof(item), **cnt);
-for (int i = 0; i < **cnt; i++) {
+for (int i = 0; i < **cnt; i++) {   
     printf("Item %d: ID='%s'\n", i, (*ptr)[i].id);
 }
 ;
@@ -142,9 +146,16 @@ for (int i = 0; i < **cnt; i++) {
     }
      
 }
-void load(item **ptr, int **cnt){
+void load(item **ptr,int **cpt, int **cnt){
     unsigned int result;
+    char again[15];
     char buffer[50];
+    do{
+    if(**cnt >= **cpt){
+            **cpt *= 2;
+        *ptr  = realloc(*ptr, sizeof(item)* (**cpt));
+        
+        }
   printf("Enter file to open\n");
   read_clean(buffer,sizeof(buffer));
     FILE *fp = fopen(buffer,"rb");
@@ -155,23 +166,56 @@ void load(item **ptr, int **cnt){
     *cnt = malloc(sizeof(int));
     if (*cnt == NULL) {
         printf("cnt allocation failed\n");
+         **cnt = 0;
         return;
     }   
-   
+   bucket(ptr,cnt);
 }
 
 size_t item_count = (size_t)(**cnt);
- void *tmp =realloc(*ptr,(**cnt) * sizeof(item));
-         *ptr = tmp;
-         if(*ptr == NULL){
-            printf("load file allocation failed oof\n");
+void *tmp = NULL;
+ 
+         
+         if(*ptr == NULL && item_count == 0){
+            tmp = malloc(1);
+           *ptr = tmp;
+            printf("load file allocation failed oooof\n");
+         }else{
+             tmp =realloc(*ptr,(**cnt) * sizeof(item));
          }
 
-         fread(&c_result, sizeof(unsigned int), 1, fp);
-         fread(&item_count, sizeof(item_count),1,fp);
+        if(fread(&c_result, sizeof(unsigned int), 1, fp) != 1){
+            if(feof(fp)){
+                printf("File reach end\n");
+            
+            }else if(ferror(fp)){
+                printf("file io failure\n");
+            }else{
+                printf("I dont even know anymore1\n");
+            }
+        }
+         if(fread(&item_count, sizeof(item_count),1,fp)!= 1){
+            if(feof(fp)){
+                printf("File reach end\n");
+            
+            }else if(ferror(fp)){
+                printf("file io failure\n");
+            }else{
+                printf("I dont even know anymore2\n");
+            }
+         }
        
         
-              fread(*ptr,sizeof(item),item_count,fp);
+              if(fread(*ptr,sizeof(item),item_count,fp)!= 1){
+                 if(feof(fp)){
+                printf("File reach end\n");
+            
+            }else if(ferror(fp)){
+                printf("file io failure\n");
+            }else{
+                printf("I dont even know anymore3\n");
+            }
+              }
               if (*cnt == NULL) {
         *cnt = malloc(sizeof(int));
     }
@@ -183,9 +227,31 @@ size_t item_count = (size_t)(**cnt);
          printf("checksum integrity functional and correct\n");
          printf("checksum %zu\n",result);
          printf("file checksum %zu\n",c_result);
+         for(int i = 0;i<**cnt;i++){
+printf("%-10s|%-10s|%-10s|%-10s|%-10s\n", "ID","Name","Quantity","Price","Hash");
+printf("%-10s|%-10s|%-10s|%-10.2f|%-10u\n", 
+    
+(*ptr)[i].id,
+(*ptr)[i].name,
+(*ptr)[i].quantity,
+(*ptr)[i].price,
+(*ptr)[i].hash
+);
+         }
          }else{
             printf("checksum not matching, file may be corrupted\n");
          }
+          read_clean(again, sizeof(again));
+
+     if (tolower(again[0]) == '1') {
+       printf("Returning to menu... press Enter to continue.");
+    getchar();
+    } else {
+        break;
+    }
+ bucket(ptr, cnt);  
+    } while (1);
+       
 }
 
 
@@ -314,7 +380,8 @@ void add(int **capacity, int **count, item **items) {
         
         if(**count >= **capacity){
             **capacity *= 2;
-        *items  = realloc(*items, sizeof(item)* (**capacity));
+
+            *items  = realloc(*items, sizeof(item)* (**capacity));
         
         }
        item *p1 = &(*items)[**count];
@@ -360,7 +427,12 @@ storeItem(items, capacity, count);
 void show_options(item **ptr, int **cpt, int **cnt) {
     char input[10];
     int choice;
-
+printf("DEBUG: ptr=%p, *ptr=%p, cpt=%p, *cpt=%p, cnt=%p, *cnt=%p\n", 
+           ptr, ptr ? *ptr : NULL, 
+           cpt, cpt ? *cpt : NULL, 
+           cnt, cnt ? *cnt : NULL);
+    
+    if (cnt && *cnt) printf("DEBUG: **cnt=%d\n", **cnt);
     do {
         printf("Add Item?:[1]\n");
         printf("Edit Item?:[2]\n");
@@ -375,11 +447,11 @@ choice = atoi(input);
 
         switch (choice) {
             case 1:
-               #ifdef _WIN32
-            system("cls");
-            #else
-            system("clear");
-            #endif
+               //#ifdef _WIN32
+            //system("cls");
+            //#else
+            //system("clear");
+            //#endif
                 add(cpt, cnt, ptr);
                 break;
             case 2:
@@ -391,7 +463,7 @@ choice = atoi(input);
             case 4:
               search(ptr);
                 break;
-                break;
+                
             case 5:
               save(ptr, cnt);
                 break;
@@ -433,8 +505,8 @@ void option(int **num,int **capacity,int **count,item **p1){
         #else
         system("clear");
         #endif
-        load(p1,count);
-       
+        load(p1,capacity,count);
+       show_options(p1, capacity, count);
         break;
     }
     case 4:{
@@ -490,10 +562,7 @@ int main ( ){
     printf("=======================================\n");
    
 
-
-   
-    
-    int *capacity = malloc(sizeof(int));
+int *capacity = malloc(sizeof(int));
     *capacity = 4;
     int *count = malloc(sizeof(int));
     *count = 0;
